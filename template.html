@@ -1,0 +1,48 @@
+<html>
+  <body>
+    <div id="app"></div>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/jsx">
+      const app = document.getElementById('app');
+
+      function createTitle(title){
+        if (title){
+            return title;
+        } else{
+            return "Welcome to my website";
+        }
+      }
+      function Header(root) {
+        return (
+            <h1>{createTitle(root.title)}</h1>
+        );
+      }
+      
+      function HomePage() {
+        function handleClick() {
+            alert(`increment like count ${likes}`);
+            setLikes(likes + 1);
+        }
+        const [likes, setLikes] = React.useState(0);
+        const names = ['Ada Lovelace', 'Grace Hopper', 'Margaret Hamilton'];
+        return (
+            <div>
+                <Header title="React" />
+                <Header title="Develop. Preview. Ship." />
+                <ul>
+                    {names.map(name => (
+                        <li key={name}>{name}</li>
+                    ))}
+                </ul>
+                <button onClick={handleClick}>Like</button>
+            </div>
+        );
+      }
+
+      const root = ReactDOM.createRoot(app);
+      root.render(<HomePage />);
+    </script>
+  </body>
+</html>
