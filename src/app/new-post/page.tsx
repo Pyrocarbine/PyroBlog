@@ -1,19 +1,37 @@
 'use client';
-import { useState } from "react"; 
+import { use, useState } from "react"; 
+import S3 from 'aws-sdk/clients/s3';
+
+console.log("S3:", S3);
+
 export default function NewPostPage() {
     const [postTitle, setPostTitle] = useState("");
     const [postContent, setPostContent] = useState("");
+    const [error, setError] = useState("");
     const isFormValid = postTitle.trim() !== "" && postContent.trim() !== "";
     async function submitPost(event: React.FormEvent<HTMLFormElement>) {
-        await fetch('/api/make-post', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ title: postTitle, content: postContent }),
-        });
-        setPostTitle("");
-        setPostContent("");
+        event.preventDefault();
+        if (!isFormValid) {
+            setError("Both title and content are required.");
+            return;
+        }
+        try {
+            const res = await fetch("/api/make-post", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title: postTitle, content: postContent }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.error || "Something went wrong!");
+            }
+
+            setPostTitle("");
+            setPostContent("");
+        } catch (err: any) {
+            setError(err.message); // Show API error
+        }
     }
     return (
         <main>
@@ -33,6 +51,7 @@ export default function NewPostPage() {
                     >
                         Submit Post
                     </button>
+                    {error && <p className="text-red-500 text-center mt-2">{error}</p>}
                 </form>
             </div>
         </main>

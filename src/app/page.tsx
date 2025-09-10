@@ -1,6 +1,7 @@
 import Page from './components/posts';
 import CreatePostButton from './components/CreatePostsButton';
-
+import { auth } from "./auth"
+ 
 
 export default function Home() {
   return (

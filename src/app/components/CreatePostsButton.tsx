@@ -1,6 +1,9 @@
+import { auth } from "../auth"
 import Link from "next/link";
 
-export default function CreatePostButton() {
+export default async function CreatePostButton() {
+    const session = await auth();
+    if (!session?.user) return <div className="text-center">Sign In to post New Blogs</div>;
     return (
         <Link
             href="/new-post"
