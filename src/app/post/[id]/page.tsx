@@ -3,12 +3,7 @@ import { Post } from '../../types/post';
 
 const sql = neon(process.env.DATABASE_URL!);
 
-interface PageProps {
-  params: { id: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
-}
-
-export default async function getPost({ params, searchParams }: PageProps) {
+export default async function getPost({ params } : {params: Promise<{id: string}>}) {
     const { id } = await params;
     const postId = Number(id);
     const [post] = (await sql`
