@@ -14,9 +14,9 @@ export default async function getPost({params}: {params: {id: string}}) {
     return (
 
         <div className="p-6 block ml-auto mr-auto w-3/4">
-            <div className="text-4xl font-semibold font-inter block mr-auto ml-auto"> {post.title} </div>
-            <p className="text-m font-sans mb-4 "> Created by {post.display_name} on {post.created_at} </p>
-            <p className="text-lg font-sans"> {post.content} </p>
+            <div className="text-4xl font-semibold font-inter block mr-auto ml-auto"> {post.title.toString()} </div>
+            <p className="text-m font-sans mb-4 "> Created by {post.display_name.toString()} on {post.created_at.toString()} </p>
+            <p className="text-lg font-sans"> {post.content.toString()} </p>
         </div>
     );
 }
