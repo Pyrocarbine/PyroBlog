@@ -29,8 +29,12 @@ export default function NewPostPage() {
 
             setPostTitle("");
             setPostContent("");
-        } catch (err: any) {
-            setError(err.message); // Show API error
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message); // Safe: err is an Error
+            } else {
+                setError("An unexpected error occurred"); // fallback
+            }
         }
     }
     return (
