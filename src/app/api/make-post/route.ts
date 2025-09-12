@@ -10,8 +10,8 @@ export async function POST(req: Request) {
   const displayName : string = session.user.name || "Anonymous";
   try {
     const { title, content } = await req.json();
-    await sql`INSERT INTO posts (title, content, email, display_name) VALUES (${title}, ${content}, ${session.user.email}, ${displayName})`;
-    return NextResponse.json({ success: true });
+    const [postID] = await sql`INSERT INTO posts (title, content, email, display_name) VALUES (${title}, ${content}, ${session.user.email}, ${displayName}) RETURNING id`;
+    return NextResponse.json({ success: true, postId: postID.id});
   } catch (error) {
     console.error("Error inserting post:", error);
     return NextResponse.json({ success: false, error }, { status: 500 });

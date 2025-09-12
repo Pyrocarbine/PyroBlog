@@ -1,16 +1,91 @@
 'use client';
-import { use, useState } from "react"; 
-import S3 from 'aws-sdk/clients/s3';
+import { use, useState, useRef } from "react"; 
+import { useEditor, EditorContent} from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Image from "@tiptap/extension-image";
+import ImageResize from 'tiptap-extension-resize-image';
+import type { Editor as EditorType } from "@tiptap/react"; 
 
-console.log("S3:", S3);
+function ImageUploadButton({ editor }: { editor: EditorType | null }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  if (!editor) return null;
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log("hi from image upload button");
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+    const res = await fetch("/api/upload-url", {
+      method: "POST",
+      body: formData,
+    });
+    const { getUrl } = await res.json();
+
+    // Step 3: insert into TipTap
+    editor.chain().focus().setImage({ src: getUrl }).run();
+
+    e.target.value = "";
+  };
+  
+  const addImage = () => {
+    fileInputRef.current?.click(); // Open file picker programmatically
+  };
+
+  return (
+    <>
+      <div
+        onClick={addImage}
+        className="px-2 py-1 border-b cursor-pointer"
+      >
+        Add Image
+      </div>
+      <input
+        type="file"
+        accept="image/*"
+        ref={fileInputRef}
+        onChange={handleFileChange}
+        className="hidden"
+      />
+    </>
+  );
+}
+
+function MenuBar( { editor }: {editor: EditorType | null } ) {
+  if (!editor) return null;
+
+  return (
+    <div className="flex gap-2 mb-3">
+      <div
+        onClick={() => editor.chain().focus().toggleBold().run()}
+        className="px-2 py-1 border-b cursor-pointer"
+      >
+        Bold
+      </div>
+      <ImageUploadButton editor={editor}/>
+    </div>
+  );
+}
 
 export default function NewPostPage() {
     const [postTitle, setPostTitle] = useState("");
-    const [postContent, setPostContent] = useState("");
     const [error, setError] = useState("");
-    const isFormValid = postTitle.trim() !== "" && postContent.trim() !== "";
+    const editor: EditorType | null = useEditor({
+        extensions: [StarterKit, Image, ImageResize],
+        content: "",
+        immediatelyRender: false,
+        editorProps: {
+            attributes: {
+              class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl mx-auto focus:outline-none',
+            },
+        },
+    });
+    const isFormValid : boolean | null = postTitle.trim() !== "" && editor && editor.getHTML().trim() !== "";
     async function submitPost(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
+        if(!editor) return;
+        const contentHTML = editor.getHTML();
         if (!isFormValid) {
             setError("Both title and content are required.");
             return;
@@ -19,16 +94,16 @@ export default function NewPostPage() {
             const res = await fetch("/api/make-post", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title: postTitle, content: postContent }),
+                body: JSON.stringify({ title: postTitle, content: contentHTML }),
             });
 
+            const data = await res.json();
             if (!res.ok) {
-                const data = await res.json();
                 throw new Error(data.error || "Something went wrong!");
             }
 
             setPostTitle("");
-            setPostContent("");
+            editor.commands.clearContent();
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message); // Safe: err is an Error
@@ -42,8 +117,11 @@ export default function NewPostPage() {
             <div className="text-center text-3xl pb-8 pt-2"> NewPostPage</div>
             <div className="w-1/2 block m-auto">
                 <form onSubmit={submitPost} className="space-y-4">
-                    <input type="text" value={postTitle} placeholder="Title" onChange={(e) => setPostTitle(e.target.value)} className="w-full border p-2" required/>
-                    <textarea value={postContent} onChange={(e) => setPostContent(e.target.value)} placeholder="Text" className="w-full border text-sm rounded p-2 h-40" required/>
+                    <input type="text" value={postTitle} placeholder="Title" onChange={(e) => setPostTitle(e.target.value)} className="w-full border p-2 mb-5"/>
+                    <div className="pt-1 pb-3 pl-4 pr-4 border rounded-lg prose max-w-none">
+                        <MenuBar editor={editor} />
+                        <EditorContent editor={editor} />
+                    </div>
                     <button
                         type="submit"
                         disabled={!isFormValid}
