@@ -6,12 +6,12 @@ import Image from "@tiptap/extension-image";
 import ImageResize from 'tiptap-extension-resize-image';
 import type { Editor as EditorType } from "@tiptap/react"; 
 
+
 function ImageUploadButton({ editor }: { editor: EditorType | null }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   if (!editor) return null;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    console.log("hi from image upload button");
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -21,6 +21,9 @@ function ImageUploadButton({ editor }: { editor: EditorType | null }) {
       method: "POST",
       body: formData,
     });
+    if (res.status !== 200){
+      return;
+    }
     const { getUrl } = await res.json();
 
     // Step 3: insert into TipTap

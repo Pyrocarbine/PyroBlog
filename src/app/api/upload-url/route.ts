@@ -1,6 +1,7 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { auth } from "../../auth";
 
 const s3Client = new S3Client({
     region: "us-east-1",
@@ -11,10 +12,11 @@ const s3Client = new S3Client({
 });
 
 export async function POST(req: Request) {
+    const session= await auth();
+    if (!session?.user) return NextResponse.json({ success: false, error: "User is not signed in. Please sign in to make new posts"}, { status: 500 });
     const formData = await req.formData();
     const file = formData.get("file") as File;
     if (!file) return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-    
     const fileName = `${Date.now()}-${file.name}`;
 
     const buffer = Buffer.from(await file.arrayBuffer());
@@ -34,5 +36,5 @@ export async function POST(req: Request) {
     })
 
     const getUrl = await getSignedUrl(s3Client, getCommand, { expiresIn: 60 * 5});
-    return NextResponse.json({ getUrl });
+    return NextResponse.json({ success: true, getUrl }, {status: 200});
 }
